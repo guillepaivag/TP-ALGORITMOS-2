@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 struct areaDoc
 {
@@ -11,19 +12,24 @@ struct areaDoc
 struct tipos{
 	int activo;
 	int pasos[5];
+	int cantidadDoc;
 };
 
 typedef struct areaDoc areaDoc;
 typedef struct tipos tipos;
 
 int cantidadTipos;
-int cantDocumentos;
+int cantidadDocumentos;
 tipos vecTipos[1];
 
 void addDato(areaDoc**, areaDoc**, int);
-void preguntaLosTiposNuevo(tipos*);
+void agregarTiposNuevos(tipos*);
+void agregarCantidadDeDocumentos(tipos*);
+void cerearVecTipos(tipos*);
 
 int main(){
+
+	srand(time(NULL));
 
 	int modificacion;
 	int comenzarPrograma = 1;
@@ -55,7 +61,9 @@ int main(){
 					scanf("%d", &cantidadTipos); 
 					tipos vecTipos[cantidadTipos];
 
-					preguntaLosTiposNuevo(vecTipos);
+					agregarTiposNuevos(vecTipos);
+
+					agregarCantidadDeDocumentos(vecTipos);
 
 					//run();
 			}else if(simulacion == 2){
@@ -101,22 +109,42 @@ int main(){
 }
 
 
-void preguntaLosTiposNuevo(tipos vecTipos[])
+void agregarTiposNuevos(tipos vecTipos[])
 {
+	int verificadorDePasoDeArea[5];
 	int i, j;
+	int auxPaso;
 
 	// TIPO
 	for(i = 0; i < cantidadTipos; i++){
+		verificadorDePasoDeArea[0] = 0;
+		verificadorDePasoDeArea[1] = 0;
+		verificadorDePasoDeArea[2] = 0;
+		verificadorDePasoDeArea[3] = 0;
+		verificadorDePasoDeArea[4] = 0;	
 		vecTipos[i].activo = 1;
 
 		// AREAS
-		printf("INGRESE LAS AREAS POR LA QUE PASARA EL TIPO %d: \n(Observacion: Colocar -1 para finalizar)\n", i+1);
+		printf("INGRESE LAS AREAS POR LA QUE PASARA EL TIPO %d: \n(Observacion: Colocar 0 para finalizar)\n", i+1);
 		for(j = 0; j < 5; j++){
-			printf("SU PASO %d sera: ", j+1);
-			scanf("%d", &vecTipos[i].pasos[j]);
-			if(vecTipos[i].pasos[j] <= 0){
+			do{
+				printf("SU PASO %d SERA: ", j+1);
+				scanf("%d", &auxPaso);
+				if(auxPaso == 0){
+					break;
+				}
+
+			}while(auxPaso < 0 || auxPaso >= 6 || verificadorDePasoDeArea[auxPaso-1] == 1);
+			
+			if(auxPaso > 0 && auxPaso < 6){
+				vecTipos[i].pasos[j] = auxPaso;
+				verificadorDePasoDeArea[auxPaso-1] = 1;
+			}
+
+			if(auxPaso == 0){
 				break;
 			}
+
 		}
 		
 	}
@@ -124,6 +152,76 @@ void preguntaLosTiposNuevo(tipos vecTipos[])
 	return ;
 }
 
+void agregarCantidadDeDocumentos(tipos vecTipos[]){
+	int i, cantidadDefinida, agregarManualmente, auxCantidadDocumentoTipo;
+	printf("\nLA CANTIDAD DE DOCUMENTOS YA ESTA DEFINIDA? (Observacion: 1-SI, 0-NO-Random)\nRespuesta: ");
+	scanf("%d", &cantidadDefinida);
+	if(cantidadDefinida){
+		printf("LA CANTIDAD DE DOCUMENTOS ES: ");
+		scanf("%d", &cantidadDocumentos);
+	}else{
+		cantidadDocumentos = 100 + rand()%100;
+	}
+
+	int auxCantidadDocumentos = cantidadDocumentos;
+	printf("DESEA AGREGAR MANUALMENTE LAS CANTIDADES POR TIPO? (Observacion: 1-SI, 0-NO-Random)\nRespuesta: ");
+	scanf("%d", &agregarManualmente);
+	if(agregarManualmente){
+		while(auxCantidadDocumentos){
+			cerearVecTipos(vecTipos);
+			auxCantidadDocumentos = cantidadDocumentos;
+			for(i = 0; i < cantidadTipos; i++){
+				printf("LE SOBRA %d\n", auxCantidadDocumentos);
+
+				printf("CUANTOS DOCUMENTOS TIENE EL TIPO %d? ", i+1);
+				scanf("%d", &auxCantidadDocumentoTipo);
+				while(auxCantidadDocumentoTipo > auxCantidadDocumentos || auxCantidadDocumentoTipo < 0){
+					printf("AGREGUE CORRECTAMENTE POR FAVOR\n");
+					printf("CUANTOS DOCUMENTOS TIENE EL TIPO %d? ", i+1);
+					scanf("%d", &auxCantidadDocumentoTipo);
+				}
+				vecTipos[i].cantidadDoc = auxCantidadDocumentoTipo;
+
+				auxCantidadDocumentos -= vecTipos[i].cantidadDoc;
+				if(auxCantidadDocumentos == 0){
+					printf("YA SELECCIONO TODO! NO SOBRA MAS :)\n");
+					break;
+				}
+			}
+			if(auxCantidadDocumentos){
+				printf("VUELVA A INGRESAR TODO, NO SE USO LA TOTALIDAD DE DOCUMENTOS DISPONIBLES :(\n");
+			}
+		}
+	}else{
+		auxCantidadDocumentos = cantidadDocumentos;
+		cerearVecTipos(vecTipos);
+		for(i = 0; i < cantidadTipos-1; i++){
+			printf("LE SOBRA %d\n", auxCantidadDocumentos);
+			auxCantidadDocumentoTipo = rand()%auxCantidadDocumentos;
+			printf("SE ELIGIO PARA EL TIPO %d UNA CANTIDAD DE %d\n", i+1, auxCantidadDocumentoTipo);
+			auxCantidadDocumentos -= auxCantidadDocumentoTipo;
+			vecTipos[i].cantidadDoc = auxCantidadDocumentoTipo;
+			if(auxCantidadDocumentos == 0){
+				printf("LE SOBRA %d\n", auxCantidadDocumentos);
+				break;
+			}
+		}
+		printf("LE SOBRA %d\n", auxCantidadDocumentos);
+		vecTipos[i].cantidadDoc = auxCantidadDocumentos;
+		printf("SE ELIGIO PARA EL TIPO %d UNA CANTIDAD DE %d\n", i+1, auxCantidadDocumentoTipo);
+		auxCantidadDocumentos -= auxCantidadDocumentos;
+		printf("LE SOBRA %d\n", auxCantidadDocumentos);
+		printf("YA SELECCIONO TODO! NO SOBRA MAS :)\n");
+	}
+
+	return ;
+}
+
+void cerearVecTipos(tipos* vecTipos){
+	for(int i = 0; i < cantidadTipos; i++){
+		vecTipos[i].cantidadDoc = 0;
+	}
+}
 
 
 void addDato(areaDoc* *area, areaDoc* *ult, int myDato){
