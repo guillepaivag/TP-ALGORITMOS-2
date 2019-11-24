@@ -14,6 +14,15 @@ struct tipos {
     int cantidadDoc;
 };
 
+struct Documento{
+    int tipo;
+    int id;
+    int recorrido[2][5];
+    time_t tiempoInicio, tiempoMov;
+    double duracion;
+    
+};
+
 typedef struct areaDoc areaDoc;
 typedef struct tipos tipos;
 
@@ -25,7 +34,8 @@ void addDato(areaDoc**, areaDoc**, int);
 void agregarTiposNuevos(tipos*);
 void agregarCantidadDeDocumentos(tipos*);
 void cerearVecTipos(tipos*);
-void run(tipos*);
+void run(tipos*, areaDoc* area[][5]);
+void ImprimirReporte(areaDoc**);
 
 int main() {
 
@@ -63,7 +73,8 @@ int main() {
 
                 agregarCantidadDeDocumentos(vecTipos);
 
-                run(vecTipos);
+                run(vecTipos, area);
+                
             } else if (simulacion == 2) {
 
                 if (yaSimulada == 1) {
@@ -203,7 +214,7 @@ void agregarCantidadDeDocumentos(tipos vecTipos[]) {
             }
         }
         printf("LE SOBRA %d\n", auxCantidadDocumentos);
-        vecTipos[i].cantidadDoc = auxCantidadDocumentos;  
+        vecTipos[i].cantidadDoc = auxCantidadDocumentos;
         printf("SE ELIGIO PARA EL TIPO %d UNA CANTIDAD DE %d\n", i + 1, auxCantidadDocumentos);
         auxCantidadDocumentos -= auxCantidadDocumentos;
         printf("LE SOBRA %d\n", auxCantidadDocumentos);
@@ -241,9 +252,9 @@ void addDato(areaDoc* *area, areaDoc* *ult, int myDato) {
     }
 }
 
-void run(tipos vecTipos[]) {
-    int vecTotalDoc[200];
-    int i;
+void run(tipos vecTipos[], areaDoc* area[][5]) {
+    Documento vecTotalDoc[200];
+    int i,j;
     int auxTipo;
     for (i = 0; i < cantidadDocumentos; i++) {
         auxTipo = rand() % cantidadTipos;
@@ -251,54 +262,82 @@ void run(tipos vecTipos[]) {
         while (vecTipos[auxTipo].cantidadDoc == 0) {
             auxTipo = rand() % cantidadTipos;
         }
-        vecTotalDoc[i] = auxTipo + 1;
+        vecTotalDoc[i].tipo = auxTipo + 1;
+        vecTotalDoc[i].id=i+1;
+        for(j=0;j<5;j++){
+            vecTotalDoc[i].recorrido[0][j]=vecTipos[vecTotalDoc[i].tipo-1].pasos[j]
+            vecTotalDoc[i].recorrido[1][j]=0;       
+        }
         vecTipos[auxTipo].cantidadDoc -= 1;
 
     }
 
-////////////////////////EMPIEZA SIMULACION///////////////////////////////////////////////////////////
+    ////////////////////////EMPIEZA SIMULACION///////////////////////////////////////////////////////////
+
+    int posArea, myDato;
+    areaDoc* aux;
     
     time_t HoraMov = time(NULL);
     time_t HoraIni = time(NULL);
+    time_t ultimoAgregado = time(NULL);
+    
+    int tiempoEspera=0;
+    int documento=0;
+    
     int cam = 0;
 
     while (difftime(HoraMov, HoraIni) != 97) {
         HoraMov = time(NULL);
-
         
+        if(difftime(HoraMov,ultimoAgregado)==tiempoEspera){
+            
+            if(documento < cantidadDocumentos){
+                addDocumento(&area[0][posArea - 1], &area[1][posArea - 1], vecTotalDoc[documento]);
+                documento++;
+            }else{
+                printf("\nYA SE PROCESARON TODOS LOS DOCUMENTOS :D");
+                break;
+                
+            }
+            
+            
+            ultimoAgregado = time(NULL);
+            
+            tiempoEspera=random()%5;
+            
+        }
+        
+        
+           
+            
+
+
+
+            addDato(&area[0][posArea - 1], &area[1][posArea - 1], myDato);
+        
+
+
         if (difftime(HoraMov, HoraIni) == cam) {
             for (i = 0; i < 5; i++) {
-                //ImprimirReporte(area[0][i]);
+                ImprimirReporte(&area[0][i]);
             }
-            cam = cam + 4;
+            cam=cam+4;
         }
 
     }
+
+
+
+
     
 
 
-    /*int i;
-    int posArea, myDato;
-    areaDoc* aux;
-    while (1) {
-        printf("INGRESE POSICION: ");
-        scanf("%d", &posArea);
-        printf("INGRESE DATO: ");
-        scanf("%d", &myDato);
-        if (myDato == 0) {
-            break;
-        }
-        
-        
-        
-        addDato(&*area[0][posArea - 1], &*area[1][posArea - 1], myDato);
+}
+
+void ImprimirReporte(areaDoc* *area) {
+    while ((*area) != NULL) {
+        printf("%d hola", (*area)->dato);
+        (*area) = (*area)->sig;
     }
-    for (i = 0; i < 5; i++) {
-        aux = area[0][i];
-        while (aux != NULL) {
-            printf("%d ", aux->dato);
-            aux = aux->sig;
-        }
-        printf("\n");
-    }*/
+    printf("\n");
 }
