@@ -288,13 +288,13 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
     int tiempoEspera = 0;
     int numeroDeDocumento = 0;
     
-    int cam = 0;
+    int cambiosSegundos = 0;
 
     while(difftime(HoraMov, HoraIni) != 97) {
         HoraMov = time(NULL);
 
-        // PROCESO
-        
+
+        // PROCESO     
         if(difftime(HoraMov,ultimoAgregado) == tiempoEspera){
             
             if(numeroDeDocumento < cantidadDocumentos){
@@ -314,19 +314,15 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
         
 
 
-        if(difftime(HoraMov, HoraIni) == cam) {
+        if(difftime(HoraMov, HoraIni) == cambiosSegundos) {
             for(i = 0; i < 5; i++) {
                 ImprimirReporte(area[0][i]);
             }
-            cam = cam + 4;
+            cambiosSegundos = cambiosSegundos + 4;
         }
 
     }
 
-
-
-
-    
 
 
 }
