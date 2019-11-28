@@ -247,10 +247,16 @@ void addDocumento(documentoEnArea* *inicio, documentoEnArea* *ultimo, documento 
     ///////////////////////////////////////////////////////////////////
     nuevoDocumentoEnArea->tipo = miDocumento.tipo;
     nuevoDocumentoEnArea->id = miDocumento.id;
+    nuevoDocumentoEnArea->recorrido[0][0]=miDocumento.recorrido[0][0];
+    nuevoDocumentoEnArea->recorrido[0][1]=miDocumento.recorrido[0][1];
+    nuevoDocumentoEnArea->recorrido[0][2]=miDocumento.recorrido[0][2];
+    nuevoDocumentoEnArea->recorrido[0][3]=miDocumento.recorrido[0][3];
+    nuevoDocumentoEnArea->recorrido[0][4]=miDocumento.recorrido[0][4];
     nuevoDocumentoEnArea->pasosTotal = 0;
     nuevoDocumentoEnArea->tiempoInicio = miDocumento.tiempoInicio;
     nuevoDocumentoEnArea->tiempoMovimiento = miDocumento.tiempoInicio;
     nuevoDocumentoEnArea->duracion = 0;
+    
     ///////////////////////////////////////////////////////////////////
 
     if(*inicio == NULL){
@@ -318,7 +324,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
 
             }else{
                 printf("\nYA SE PROCESARON TODOS LOS DOCUMENTOS :D");
-                break;
+                
                 
             }
             
@@ -353,11 +359,12 @@ void ImprimirReporte(documentoEnArea* area) {
     printf("\nCOMIENZA LA IMPRESION: \n\n");
 
     while(area != NULL) {
+        
         printf("SU TIPO ES: |%d|\n", area->tipo);
         printf("LA ID DEL DOCUMENTO ES: |%d|\n", area->id);
-        printf("ESTA EN LA AREA |%d| EN SU PASO NUMERO |%d|\n", (area->recorrido[0][area->pasosTotal]), (area->pasosTotal)+1);
+        printf("ESTA EN LA AREA |%d| EN SU PASO NUMERO |%d|\n", area->recorrido[0][area->pasosTotal], area->pasosTotal+1);
         printf("SU TIEMPO DE INICIO ES: ");
-        ctime(&(area->tiempoInicio));
+        printf("%s",ctime(&(area->tiempoInicio)));
         printf("\n");
         area = area->sig;
     }
