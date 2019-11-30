@@ -20,9 +20,10 @@ struct documento{
     int recorrido[2][5];
     float tiempoPromedioPorTipoPorArea[5];
     float desviacionTipicaPorArea[5];
-    int pasosTotal;
+    double duracion[5];
+    int pasoActual;
     time_t tiempoInicio, tiempoFinal;
-    double duracion;
+    
 };
 
 struct documentoEnArea{
@@ -31,10 +32,11 @@ struct documentoEnArea{
     int recorrido[2][5];
     float tiempoPromedioPorTipoPorArea[5];
     float desviacionTipicaPorArea[5];
-    int pasosTotal;
+    double duracion[5];
+    int pasoActual;
     time_t tiempoInicio, tiempoFinal;
     time_t tiempoInicioProceso, tiempoMovimientoProceso;
-    double duracion;
+    
     struct documentoEnArea *ant;
     struct documentoEnArea *sig;
 };
@@ -288,7 +290,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
     documento vecTotalDoc[200];
     int i, j;
     int auxTipo;
-    int vecVerificadorInicio[5];
+    int procesando[5];
     
     // AGREGA TODO EN EL DOCUMENTO
     for(i = 0; i < cantidadDocumentos; i++){
@@ -301,20 +303,25 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
         vecTotalDoc[i].pendiente = 0;
         vecTotalDoc[i].noEntro = 1;
         vecTotalDoc[i].tipo = auxTipo + 1;
+        printf("SU TIPO ES: |%d|\n", vecTotalDoc[i].tipo);
         vecTotalDoc[i].id = i+1;
-        vecTotalDoc[i].pasosTotal = 0;
+        printf("SU ID ES: |%d|\n", vecTotalDoc[i].id);
+        vecTotalDoc[i].pasoActual = 0;
         for(j = 0; j < 5; j++){
             vecTotalDoc[i].recorrido[0][j] = vecTipos[vecTotalDoc[i].tipo-1].pasos[j];
+            printf("SU RECORRIDO NRO %d ES: |%d|\n", j, vecTotalDoc[i].recorrido[0][j]);
             vecTotalDoc[i].recorrido[1][j] = 0;   
             vecTotalDoc[i].tiempoPromedioPorTipoPorArea[j] = vecTipos[vecTotalDoc[i].tipo-1].tiempoPromedioPorTipoPorArea[j];
+            printf("SU TIEMPO PROMEDIO EN EL AREA %d ES: |%d|\n", j, vecTotalDoc[i].tiempoPromedioPorTipoPorArea[j]);
             vecTotalDoc[i].desviacionTipicaPorArea[j] = vecTipos[vecTotalDoc[i].tipo-1].desviacionTipicaPorArea[j];          
+            printf("SU TIEMPO PROMEDIO EN EL AREA %d ES: |%d|\n", j, vecTotalDoc[i].desviacionTipicaPorArea[j]);
         }
         
         vecTipos[auxTipo].cantidadDoc -= 1;
     }
 
     for(i = 0; i < 5; i++){
-        vecVerificadorInicio[i] = 0;
+        procesando[i] = 0;
     }
 
     ////////////////////////EMPIEZA SIMULACION///////////////////////////////////////////////////////////
@@ -337,22 +344,19 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
             if(numeroDeDocumento < cantidadDocumentos){
                 printf("\n\nENTRO EL DOCUMENTO NRO: |%d|\n", numeroDeDocumento+1);
                 areaInicioProceso = vecTotalDoc[numeroDeDocumento].recorrido[0][0];
-                vecTotalDoc[numeroDeDocumento].tiempoInicio = HoraMovimientoPrograma;
+                vecTotalDoc[numeroDeDocumento].tiempoInicio = time(NULL);
                 
                 addDocumento(&area[0][areaInicioProceso - 1], &area[1][areaInicioProceso - 1], vecTotalDoc[numeroDeDocumento]);
                 numeroDeDocumento++;
-
+                ultimoAgregado = vecTotalDoc[numeroDeDocumento - 1].tiempoInicio;
             }
-            
-            ultimoAgregado = vecTotalDoc[numeroDeDocumento - 1].tiempoInicio;
             
             //tiempoEsperaAdd = rand()%5;
             tiempoEsperaAdd = 3;
         }
         
         // PROCESO: PROCESAR LAS AREAS
-        procesarArea(area, vecVerificadorInicio, vecTotalDoc);
-
+        procesarArea(area, procesando, vecTotalDoc);
 
         if(difftime(HoraMovimientoPrograma, HoraInicioPrograma) == tiempoEsperaImp) {
             for(i = 0; i < 5; i++) {
@@ -373,33 +377,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
 }
 
 
-void imprimirInforme(documento vecTotalDoc[cantidadDocumentos]){
-    int i;
-    printf("\n------------------------------------------------------\n");
-    printf("\nGENERANDO INFORME");
-    printf("\n------------------------------------------------------\n");
-    //IMPRIMIR PROCESADAS
-    printf("\n------------------------------------------------------\n");
-    printf("\nPROCESADAS COMPLETAMENTE: ");
-   
-    
-    for(i=0;i<cantidadDocumentos;i++){
-        if(vecTotalDoc[i].procesado){
-            printf("\n\nNumero de solicitud: |%d|",vecTotalDoc[i].id);
-            printf("\nTipo de solicitud: |%d|",vecTotalDoc[i].tipo);
-            printf("\nHora de recepcion: |%s|",ctime(&(vecTotalDoc[i].tiempoInicio)));
-            printf("\nHora de conclusion: |%s|",ctime(&(vecTotalDoc[i].tiempoFinal)));
-            printf("\nDuracion: |%lf| segundos\n",difftime(vecTotalDoc[i].tiempoFinal,vecTotalDoc[i].tiempoInicio));
-        }
-    }
-    printf("\n------------------------------------------------------\n");
-    
-    //IMPRIMIR POR AREA
-    
-    
-    //IMPRIMIR POR TIPO
 
-}
 
 
 void cerearVecTipos(tipos* vecTipos){
@@ -415,6 +393,7 @@ void cerearVecTipos(tipos* vecTipos){
 
 void addDocumento(documentoEnArea* *inicio, documentoEnArea* *ultimo, documento miDocumento){
 
+    miDocumento.procesado = 0;
     miDocumento.pendiente = 1;
     miDocumento.noEntro = 0;
 
@@ -426,14 +405,22 @@ void addDocumento(documentoEnArea* *inicio, documentoEnArea* *ultimo, documento 
     //////////////////////AGREGAR DATOS ///////////////////////////////
     nuevoDocumentoEnArea->tipo = miDocumento.tipo;
     nuevoDocumentoEnArea->id = miDocumento.id;
-    nuevoDocumentoEnArea->pasosTotal = 0;
+    nuevoDocumentoEnArea->pasoActual = 0;
     for(i = 0; i < 5; i++){
         nuevoDocumentoEnArea->recorrido[0][i] = miDocumento.recorrido[0][i];
+        
         nuevoDocumentoEnArea->tiempoPromedioPorTipoPorArea[i] = miDocumento.tiempoPromedioPorTipoPorArea[i];
         nuevoDocumentoEnArea->desviacionTipicaPorArea[i] = miDocumento.desviacionTipicaPorArea[i];
+
+        if(rand()%2){
+            nuevoDocumentoEnArea->duracion[i] = nuevoDocumentoEnArea->tiempoPromedioPorTipoPorArea[i] + (nuevoDocumentoEnArea->tiempoPromedioPorTipoPorArea[i] * nuevoDocumentoEnArea->desviacionTipicaPorArea[i]);
+        }else{
+            nuevoDocumentoEnArea->duracion[i] = nuevoDocumentoEnArea->tiempoPromedioPorTipoPorArea[i] - (nuevoDocumentoEnArea->tiempoPromedioPorTipoPorArea[i] * nuevoDocumentoEnArea->desviacionTipicaPorArea[i]);
+        }
+
     }
     nuevoDocumentoEnArea->tiempoInicio = miDocumento.tiempoInicio;
-    nuevoDocumentoEnArea->tiempoFinal = miDocumento.tiempoInicio;
+    //nuevoDocumentoEnArea->tiempoFinal = miDocumento.tiempoInicio;
     ///////////////////////////////////////////////////////////////////
 
     if(*inicio == NULL){
@@ -454,17 +441,136 @@ void addDocumento(documentoEnArea* *inicio, documentoEnArea* *ultimo, documento 
 
 
 
+
+
+
+void procesarArea(documentoEnArea* area[2][5], int procesando[5], documento vecTotalDoc[cantidadDocumentos]){
+
+    int i;
+    float duracionConDesviacionTipica;
+    documentoEnArea* documentoTransladar;
+
+    // PARA CADA AREA
+    for(i = 0; i < 5; i++){
+
+        if(area[0][i] != NULL){
+
+            if(procesando[i] == 0){
+                procesando[i] = 1;
+                area[0][i]->tiempoInicioProceso = time(NULL);
+                printf("TIPO DE DOCUMENTO ES: |%d|\n", area[0][i]->tipo);
+                printf("SU TIEMPO DE INICIO DEL AREA %d ES: |%s|\n", i, ctime(&area[0][i]->tiempoInicioProceso));
+            }
+            
+            //area[0][i]->tiempoMovimientoProceso = time(NULL);
+
+            if(difftime(time(NULL), area[0][i]->tiempoInicioProceso) >= area[0][i]->duracion[ area[0][i]->pasoActual ]){
+
+                area[0][i]->pasoActual++;
+
+                area[0][i]->recorrido[1][ (area[0][i]->pasoActual) - 1 ] = 1;
+                vecTotalDoc[(area[0][i]->id)-1].recorrido[1][ (area[0][i]->pasoActual) - 1 ] = 1;
+
+                // PROCESO DE CAMBIO
+                if(area[0][i]->pasoActual < 5){
+                    // PREGUNTAMOS SI EXISTE MAS RECORRIDOS
+                    if(area[0][i]->recorrido[0][area[0][i]->pasoActual] != 0){
+
+                        // PROCESO DE CAMBIO DE DOCUMENTO DE UNA AREA A OTRA
+                        documentoTransladar = area[0][i];
+                            
+                        if((area[0][ (documentoTransladar->recorrido[0][documentoTransladar->pasoActual]) - 1 ]) != NULL){
+                            (area[1][ (documentoTransladar->recorrido[0][documentoTransladar->pasoActual]) - 1 ])->sig = documentoTransladar;
+                            (area[1][ (documentoTransladar->recorrido[0][documentoTransladar->pasoActual]) - 1 ]) = documentoTransladar;
+
+                        }else{
+                            (area[0][ (documentoTransladar->recorrido[0][documentoTransladar->pasoActual]) - 1 ]) = documentoTransladar;
+                            (area[1][ (documentoTransladar->recorrido[0][documentoTransladar->pasoActual]) - 1 ]) = documentoTransladar;
+                        
+                        }
+
+                        area[0][i] = (area[0][i])->sig;
+
+                        if(area[0][i] != NULL){
+                            area[0][i]->tiempoInicioProceso = time(NULL);
+                            procesando[i] = 1;
+
+                        }else{
+                            procesando[i] = 0;
+                        }
+
+                        documentoTransladar->sig = NULL;
+
+                    }else{
+
+                        // AGREGAR AL ARCHIVO DE LOS FINALIZADOS
+                        vecTotalDoc[(area[0][i]->id)-1].procesado = 1;
+                        vecTotalDoc[(area[0][i]->id)-1].pendiente = 0;
+                        vecTotalDoc[(area[0][i]->id)-1].noEntro = 0;
+                        vecTotalDoc[(area[0][i]->id)-1].tiempoFinal = time(NULL);
+
+                        documentoEnArea* eliminar;
+                        eliminar = area[0][i];
+                        area[0][i] = (area[0][i])->sig;
+
+                        if(area[0][i] != NULL){
+                            area[0][i]->tiempoInicioProceso = time(NULL);
+                            procesando[i] = 1;
+
+                        }else{
+                            procesando[i] = 0;
+                        }
+
+                        free(eliminar);
+
+                    }
+                }else{
+                    // AGREGAR AL ARCHIVO DE LOS FINALIZADOS
+                    vecTotalDoc[(area[0][i]->id)-1].procesado = 1;
+                    vecTotalDoc[(area[0][i]->id)-1].pendiente = 0;
+                    vecTotalDoc[(area[0][i]->id)-1].noEntro = 0;
+                    vecTotalDoc[(area[0][i]->id)-1].tiempoFinal = time(NULL);
+
+                    documentoEnArea* eliminar;
+                    eliminar = area[0][i];
+                    area[0][i] = (area[0][i])->sig;
+
+                    if(area[0][i] != NULL){
+                        area[0][i]->tiempoInicioProceso = time(NULL);
+                        procesando[i] = 1;
+
+                    }else{
+                        procesando[i] = 0;
+                    }
+
+                    free(eliminar);
+                }
+            }
+
+        }
+    }
+
+    return ;
+}
+
+
+
+
+
 void ImprimirReporte(documentoEnArea* area){
     printf("\n");
     printf("\n");
-    printf("\n\tCOMIENZA LA IMPRESION DE LA AREA |%d|:\n\n", area->recorrido[0][area->pasosTotal]);
+    printf("\n\tCOMIENZA LA IMPRESION DE LA AREA |%d|:\n\n", area->recorrido[0][area->pasoActual]);
 
     while(area != NULL){
         printf("\t\tSU TIPO ES: |%d|\n", area->tipo);
         printf("\t\tLA ID DEL DOCUMENTO ES: |%d|\n", area->id);
-        printf("\t\tESTA EN LA AREA |%d| EN SU PASO NUMERO |%d|\n", area->recorrido[0][area->pasosTotal], area->pasosTotal + 1);
+        printf("\t\tESTA EN LA AREA |%d| EN SU PASO NUMERO |%d|\n", area->recorrido[0][area->pasoActual], area->pasoActual + 1);
         printf("\t\tSU TIEMPO DE INICIO ES: ");
         printf("%s", ctime(&(area->tiempoInicio)));
+        for(int i = 0; i < 5; i++){
+            printf("\t\tSU DURACION EN EL AREA %d ES: |%lf|\n", i, area->duracion[i]);
+        }
         printf("\n\n\t\t----------------------------------------------\n\n");
         area = area->sig;
 
@@ -480,92 +586,33 @@ void ImprimirReporte(documentoEnArea* area){
 
 
 
-
-void procesarArea(documentoEnArea* area[2][5], int vecVerificadorInicio[5], documento vecTotalDoc[cantidadDocumentos]){
-
-    int i;
-    float duracionConDesviacionTipica;
-    documentoEnArea* documentoTransladar;
-
-    // PARA CADA AREA
-    for(i = 0; i < 5; i++){
-
-        if(area[0][i] != NULL){
-
-            if(vecVerificadorInicio[i] == 0){
-                area[0][i]->tiempoInicioProceso = time(NULL);
-                vecVerificadorInicio[i] = 1;
-
-                if(rand()%2){
-                    area[0][i]->duracion = area[0][i]->tiempoPromedioPorTipoPorArea[i] + (area[0][i]->tiempoPromedioPorTipoPorArea[i] * area[0][i]->desviacionTipicaPorArea[i]);
-                }else{
-                    area[0][i]->duracion = area[0][i]->tiempoPromedioPorTipoPorArea[i] - (area[0][i]->tiempoPromedioPorTipoPorArea[i] * area[0][i]->desviacionTipicaPorArea[i]);
-                }
-
+void imprimirInforme(documento vecTotalDoc[cantidadDocumentos]){
+    int i, j;
+    printf("\n------------------------------------------------------\n");
+    printf("\nGENERANDO INFORME");
+    printf("\n------------------------------------------------------\n");
+    //IMPRIMIR PROCESADAS
+    printf("\n------------------------------------------------------\n");
+    printf("\nPROCESADAS COMPLETAMENTE: ");
+   
+    
+    for(i=0;i<cantidadDocumentos;i++){
+        if(vecTotalDoc[i].procesado){
+            printf("\n\nNumero de solicitud: |%d|",vecTotalDoc[i].id);
+            printf("\nTipo de solicitud: |%d|",vecTotalDoc[i].tipo);
+            for(j = 0; j < 5; j++){
+                printf("SU RECORRIDO ES: |%d||%d|\n", vecTotalDoc[i].recorrido[0][j], vecTotalDoc[i].recorrido[1][j]);
             }
-            
-            area[0][i]->tiempoMovimientoProceso = time(NULL);
-
-            if(difftime(area[0][i]->tiempoMovimientoProceso, area[0][i]->tiempoInicioProceso) >= area[0][i]->duracion){
-
-                // PROCESO DE CAMBIO
-                area[0][i]->pasosTotal++;
-
-                if(area[0][i]->recorrido[0][area[0][i]->pasosTotal] != 0){
-
-                    // PROCESO DE CAMBIO DE DOCUMENTO DE UNA AREA A OTRA
-                    area[0][i]->recorrido[1][(area[0][i]->pasosTotal) - 1] = 1;
-                    vecTotalDoc[(area[0][i]->id)-1].recorrido[1][(area[0][i]->pasosTotal) - 1] = 1;
-
-                    documentoTransladar = area[0][i];
-                        
-                    if((area[0][(documentoTransladar->recorrido[0][documentoTransladar->pasosTotal]) - 1]) != NULL){
-                        (area[1][(documentoTransladar->recorrido[0][documentoTransladar->pasosTotal]) - 1])->sig = documentoTransladar;
-                        (area[1][(documentoTransladar->recorrido[0][documentoTransladar->pasosTotal]) - 1]) = documentoTransladar;
-
-                    }else{
-                        (area[0][(documentoTransladar->recorrido[0][documentoTransladar->pasosTotal]) - 1]) = documentoTransladar;
-                        (area[1][(documentoTransladar->recorrido[0][documentoTransladar->pasosTotal]) - 1]) = documentoTransladar;
-                    
-                    }
-
-                    area[0][i] = (area[0][i])->sig;
-
-                    documentoTransladar->sig = NULL;
-
-                }else{
-
-                    // AGREGAR AL ARCHIVO DE LOS FINALIZADOS
-                    area[0][i]->recorrido[1][(area[0][i]->pasosTotal) - 1] = 1;
-                    vecTotalDoc[(area[0][i]->id)-1].recorrido[1][(area[0][i]->pasosTotal) - 1] = 1;
-                    vecTotalDoc[(area[0][i]->id)-1].procesado = 1;
-                    vecTotalDoc[(area[0][i]->id)-1].pendiente = 0;
-                    vecTotalDoc[(area[0][i]->id)-1].tiempoFinal = time(NULL);
-
-                    documentoEnArea* eliminar;
-                    eliminar = area[0][i];
-                    area[0][i] = area[0][i]->sig;
-                    free(eliminar);
-
-                }
-
-                if(area[0][i] != NULL){
-                    
-                    vecVerificadorInicio[i] = 0;
-
-                    if(rand()%2){
-                        area[0][i]->duracion = area[0][i]->tiempoPromedioPorTipoPorArea[i] + (area[0][i]->tiempoPromedioPorTipoPorArea[i] * area[0][i]->desviacionTipicaPorArea[i]);
-                    }else{
-                        area[0][i]->duracion = area[0][i]->tiempoPromedioPorTipoPorArea[i] - (area[0][i]->tiempoPromedioPorTipoPorArea[i] * area[0][i]->desviacionTipicaPorArea[i]);
-                    }
-
-                }else{
-                    vecVerificadorInicio[i] = 0;
-                }
-
-            }
+            printf("\nHora de recepcion: |%s|",ctime(&(vecTotalDoc[i].tiempoInicio)));
+            printf("\nHora de conclusion: |%s|",ctime(&(vecTotalDoc[i].tiempoFinal)));
+            printf("\nDuracion: |%lf| segundos\n",difftime(vecTotalDoc[i].tiempoFinal, vecTotalDoc[i].tiempoInicio));
         }
     }
-
+    printf("\n------------------------------------------------------\n");
+    
+    //IMPRIMIR POR AREA
+    
+    
+    //IMPRIMIR POR TIPO
     return ;
 }
