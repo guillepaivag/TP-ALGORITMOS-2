@@ -636,8 +636,7 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
 
 void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos]) {
     int i;
-    int idSimulacion = 0;
-    int final = 0;
+
 
     almacenamientoSimulaciones archivoID = {0, 0};
     tipoAlmacenado tipoGuardar;
@@ -649,17 +648,17 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
     if (simulacionArchivo != NULL) {
         fclose(simulacionArchivo);
 
-        simulacionArchivo = fopen("idSimulaciones.txt", "ab");
+        simulacionArchivo = fopen("idSimulaciones.txt", "rb");
         //Buscamos la ultima simulacion guardada
-        fseek(simulacionArchivo, 1 * sizeof ( almacenamientoSimulaciones), SEEK_END);
-
-        fread(&archivoID, sizeof ( almacenamientoSimulaciones), 1, simulacionArchivo);
-
+        while(!feof(simulacionArchivo)){
+            fread(&archivoID, sizeof ( almacenamientoSimulaciones), 1, simulacionArchivo);
+        }
         printf("\nLa id anterior es: |%d| \nLa cantidad anterior: |%d|", archivoID.idSimulacion, archivoID.final);
+        fclose(simulacionArchivo);
+        simulacionArchivo = fopen("idSimulaciones.txt", "ab");
         //una vez hallada la ultima simulacion aniadida, aumentamos id
         archivoID.idSimulacion++;
         archivoID.final += cantidadTipos;
-        fseek(simulacionArchivo, 0 * sizeof ( almacenamientoSimulaciones), SEEK_END);
 
     } else {
 
