@@ -60,7 +60,7 @@ void cerearVecTipos(tipos*);
 void run(tipos*, documentoEnArea* area[2][5]);
 void ImprimirReporte(documentoEnArea*);
 void procesarArea(documentoEnArea* area[2][5], int vecVerificadorInicio[5], documento vecTotalDoc[cantidadDocumentos]);
-void imprimirInforme(documento vecTotalDoc[cantidadDocumentos]);
+void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[cantidadTipos]);
 
 int main(){
 
@@ -125,7 +125,7 @@ int main(){
 
                     }
 
-                    run();
+                    //run();
 
                     fclose(simulacionArchivo);
 
@@ -292,10 +292,6 @@ void agregarCantidadDeDocumentos(tipos vecTipos[]){
 
 
 
-
-
-
-
 void run(tipos vecTipos[], documentoEnArea* area[2][5]){
     system("cls");
 
@@ -326,18 +322,18 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
         vecTotalDoc[i].pendiente = 0;
         vecTotalDoc[i].noEntro = 1;
         vecTotalDoc[i].tipo = auxTipo + 1;
-        printf("SU TIPO ES: |%d|\n", vecTotalDoc[i].tipo);
+        
         vecTotalDoc[i].id = i+1;
-        printf("SU ID ES: |%d|\n", vecTotalDoc[i].id);
+       
         vecTotalDoc[i].pasoActual = 0;
         for(j = 0; j < 5; j++){
             vecTotalDoc[i].recorrido[0][j] = vecTipos[vecTotalDoc[i].tipo-1].pasos[j];
-            printf("SU RECORRIDO NRO %d ES: |%d|\n", j, vecTotalDoc[i].recorrido[0][j]);
+           
             vecTotalDoc[i].recorrido[1][j] = 0;   
             vecTotalDoc[i].tiempoPromedioPorTipoPorArea[j] = vecTipos[vecTotalDoc[i].tipo-1].tiempoPromedioPorTipoPorArea[j];
-            printf("SU TIEMPO PROMEDIO EN EL AREA %d ES: |%d|\n", j, vecTotalDoc[i].tiempoPromedioPorTipoPorArea[j]);
+            
             vecTotalDoc[i].desviacionTipicaPorArea[j] = vecTipos[vecTotalDoc[i].tipo-1].desviacionTipicaPorArea[j];          
-            printf("SU TIEMPO PROMEDIO EN EL AREA %d ES: |%d|\n", j, vecTotalDoc[i].desviacionTipicaPorArea[j]);
+            
         }
         
         vecTipos[auxTipo].cantidadDoc -= 1;
@@ -397,9 +393,6 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]){
 
     return ;
 }
-
-
-
 
 
 void cerearVecTipos(tipos* vecTipos){
@@ -468,7 +461,6 @@ void addDocumento(documentoEnArea* *inicio, documentoEnArea* *ultimo, documento 
 void procesarArea(documentoEnArea* area[2][5], int procesando[5], documento vecTotalDoc[cantidadDocumentos]){
 
     int i;
-    float duracionConDesviacionTipica;
     documentoEnArea* documentoTransladar;
 
     // PARA CADA AREA
@@ -586,9 +578,6 @@ void ImprimirReporte(documentoEnArea* area){
         printf("\t\tESTA EN LA AREA |%d| EN SU PASO NUMERO |%d|\n", area->recorrido[0][area->pasoActual], area->pasoActual + 1);
         printf("\t\tSU TIEMPO DE INICIO ES: ");
         printf("%s", ctime(&(area->tiempoInicio)));
-        for(int i = 0; i < 5; i++){
-            printf("\t\tSU DURACION EN EL AREA %d ES: |%lf|\n", i, area->duracion[i]);
-        }
         printf("\n\n\t\t----------------------------------------------\n\n");
         area = area->sig;
 
@@ -653,25 +642,8 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
     }
     printf("\n------------------------------------------------------\n");
 
-    guardarDatosDeSimulacion(vecTipos);
+    
 
     return ;
 }
 
-void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos]){
-
-    struct almacenamientoDatos
-    {
-        int idSimulacion;
-        int 
-    };
-
-    typedef struct almacenamientoDatos almacenamientoDatos;
-
-    FILE* simulacionArchivo;
-
-    simulacionArchivo = fopen("simulaciones.txt", "ab+");
-
-
-
-}
