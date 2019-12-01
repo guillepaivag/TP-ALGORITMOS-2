@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
+#include <math.h>
 
 struct tipos {
     int idTipo;
@@ -120,7 +121,7 @@ int main() {
 
                 if (simulacionArchivo != NULL) {
 
-                    printf("\nDESEA HACER MODIFICACIONES?\n 1) MODIFICAR\n 0) NO MODIFICAR\nRespuesta: ");
+                    /*printf("\nDESEA HACER MODIFICACIONES?\n 1) MODIFICAR\n 0) NO MODIFICAR\nRespuesta: ");
                     scanf("%d", &modificacion);
 
                     if (modificacion) {
@@ -137,7 +138,10 @@ int main() {
                             //agregar();
                         }
 
-                    }
+                    }*/
+
+
+                    //calcularPoisson();
 
                     //run();
 
@@ -302,7 +306,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
     int auxTipo;
     int procesando[5];
     int codigoSimulacion, intervaloActualizacion;
-    int duracionSimulacion;
+    double duracionSimulacion;
 
     codigoSimulacion++;
 
@@ -356,7 +360,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
 
     int tiempoEsperaImp = 0;
 
-    while (difftime(HoraMovimientoPrograma, HoraInicioPrograma) < /*duracionSimulacion*/25) {
+    while (difftime(HoraMovimientoPrograma, HoraInicioPrograma) < duracionSimulacion) {
         HoraMovimientoPrograma = time(NULL);
 
         // PROCESO: AGREGAR EN AREA 
@@ -617,7 +621,7 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
 
         printf("\nPROCESADAS COMPLETAMENTE EN EL AREA %d : ", i + 1);
         for (j = 0; j < cantidadTipos; j++) {
-            if (vecTipos[j].pasos[0]==i+1 || vecTipos[j].pasos[1]==i+1 || vecTipos[j].pasos[2]==i+1 || vecTipos[j].pasos[3]==i+1 || vecTipos[j].pasos[4]==i+1) {
+            if (vecTipos[j].pasos[0] == i + 1 || vecTipos[j].pasos[1] == i + 1 || vecTipos[j].pasos[2] == i + 1 || vecTipos[j].pasos[3] == i + 1 || vecTipos[j].pasos[4] == i + 1) {
                 printf("\nTIPO: %d", j + 1);
                 printf("\nCantidad procesadas: |%d|", contadorProcesados[j]);
                 printf("\nCantidad pendientes: |%d|", contadorPendientes[j]);
@@ -650,7 +654,7 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
 
         simulacionArchivo = fopen("idSimulaciones.txt", "rb");
         //Buscamos la ultima simulacion guardada
-        while(!feof(simulacionArchivo)){
+        while (!feof(simulacionArchivo)) {
             fread(&archivoID, sizeof ( almacenamientoSimulaciones), 1, simulacionArchivo);
         }
         printf("\nLa id anterior es: |%d| \nLa cantidad anterior: |%d|", archivoID.idSimulacion, archivoID.final);
@@ -682,18 +686,68 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
     }
 
     fclose(simulacionArchivo);
-    
+
     simulacionArchivo = fopen("idSimulaciones.txt", "rb");
     fread(&archivoID, sizeof ( almacenamientoSimulaciones), 1, simulacionArchivo);
-    while(!feof(simulacionArchivo)){
-        printf("\nLa id |%d| y final |%d|",archivoID.idSimulacion,archivoID.final);
+    while (!feof(simulacionArchivo)) {
+        printf("\nLa id |%d| y final |%d|", archivoID.idSimulacion, archivoID.final);
         fread(&archivoID, sizeof ( almacenamientoSimulaciones), 1, simulacionArchivo);
     }
-    
+
     fclose(simulacionArchivo);
 
     return;
 }
 
 
+/*
 
+int poissonRandom(double expectedValue);
+int Cantidad(int CanMin, int CanProm);
+
+void calcularPoisson() {
+    srand(time(NULL));
+    int CanP, horas;
+    int numero, CanM;
+    int i;
+
+    //buscar apariciones por tipo
+    for (i = 0; i < cantidadTipos; i++) {
+
+
+        printf("Ingrese la cantidad de veces promedio del suceso por dia:\n");
+        //scanf("%d",&CanP);
+        CanP = rand() % 21 + 100;
+        printf("%d\n", CanP);
+        printf("Ingrese la cantidad de minutos que durará la simulación:\n");
+        //scanf("%d",&CanM);
+        CanM = (rand() % 1441);
+        horas = CanM / 60;
+        printf("%d		%dhs %dms\n", CanM, horas, (CanM - horas * 60));
+        numero = Cantidad(CanM, CanP);
+        printf("%d", numero);
+    }
+    return 0;
+}
+
+int Cantidad(int CanMin, int CanProm) {
+    double lambda = CanProm * CanMin / 1444;
+    int numazar = poissonRandom(lambda);
+    return numazar;
+}
+
+int poissonRandom(double expectedValue) {
+    int n = 0; //counter of iteration
+    double limit;
+    double x; //pseudo random number
+    limit = exp(-expectedValue);
+    x = (rand() % 101);
+    x /= 100;
+    while (x > limit) {
+        n++;
+        x = (rand() % 101);
+        x /= 100;
+    }
+    return n;
+}
+*/
