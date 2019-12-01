@@ -11,7 +11,6 @@ struct tipos {
     int cantidadDoc; // Act (POISSON)
     float tiempoPromedioPorTipoPorArea[5]; // Act
     float desviacionTipicaPorArea[5]; // Act
-    float probabilidadAparicion; // Act
 };
 
 struct documento {
@@ -66,6 +65,9 @@ int cantidadTipos;
 int cantidadDocumentos;
 tipos vecTipos[1];
 int idContadorTipo = 0;
+double duracionSimulacion;
+int auxCantidadDoc;
+int cantidadAgregar = 0;
 
 void addDocumento(documentoEnArea**, documentoEnArea**, documento);
 void agregarTiposNuevos(tipos*);
@@ -76,6 +78,12 @@ void ImprimirReporte(documentoEnArea*);
 void procesarArea(documentoEnArea* area[2][5], int vecVerificadorInicio[5], documento vecTotalDoc[cantidadDocumentos]);
 void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[cantidadTipos]);
 void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos]);
+void actualizar(tipos vecTipos[cantidadTipos]);
+
+
+void calcularPoisson(tipos vecTipos[]);
+int poissonRandom(double expectedValue);
+int Cantidad(int CanMin, int CanProm);
 
 int main() {
 
@@ -85,6 +93,7 @@ int main() {
     int simulacion;
     int modificacion;
     int procesoModificacion;
+
 
     documentoEnArea * area[2][5] = {
         {NULL, NULL, NULL, NULL, NULL},
@@ -97,15 +106,19 @@ int main() {
         scanf("%d", &comenzarPrograma);
 
         if (comenzarPrograma) {
+            cantidadAgregar = 0;
             printf("\n1. SIMULACION NUEVA\n2. SIMULACION ANTERIOR\nRespuesta: ");
             scanf("%d", &simulacion);
 
+
+            printf("\nINGRESE LA DURACION DE LA SIMULACION EN MINUTOS: ");
+            scanf("%lf", &duracionSimulacion);
+            duracionSimulacion *= 60;
             if (simulacion == 1) {
 
                 printf("\nCANTIDAD DE TIPOS: ");
                 scanf("%d", &cantidadTipos);
                 tipos vecTipos[cantidadTipos];
-                int matrizCantidadProcesados[cantidadTipos][5];
 
                 agregarTiposNuevos(vecTipos);
 
@@ -120,28 +133,169 @@ int main() {
                 simulacionArchivo = fopen("idSimulaciones.txt", "rb");
 
                 if (simulacionArchivo != NULL) {
-
-                    /*printf("\nDESEA HACER MODIFICACIONES?\n 1) MODIFICAR\n 0) NO MODIFICAR\nRespuesta: ");
+                    fclose(simulacionArchivo);
+                    printf("\nDESEA HACER MODIFICACIONES?\n 1) MODIFICAR\n 0) NO MODIFICAR\nRespuesta: ");
                     scanf("%d", &modificacion);
-
-                    if (modificacion) {
-
+                    while (modificacion) {
                         printf("\nDESEA ACTUALIZAR? \n(Observacion: 0-NO, 1-SI)\nRespuesta: ");
                         scanf("%d", &procesoModificacion);
                         if (procesoModificacion) {
-                            //actualizar();
+                            actualizar(vecTipos);
                         }
 
                         printf("\nDESEA AGREGAR? \n(Observacion: 0-NO, 1-SI)\nRespuesta: ");
                         scanf("%d", &procesoModificacion);
                         if (procesoModificacion) {
-                            //agregar();
+
+                            int i, j, k;
+
+
+                            int cantidadTotalNueva;
+
+                            tipos vecTiposAux[cantidadTipos];
+
+                            int verificadorDePasoDeArea[5];
+                            int auxPaso, tiempoTipoPorAreaAux, desviacionTipicaPorAreaAux;
+
+                            printf("\nINGRESE LA CANTIDAD DE TIPOS A AGREGAR: ");
+                            scanf("%d", &cantidadAgregar);
+
+                            tipos vecTiposNuevos[cantidadAgregar];
+
+                            cantidadTotalNueva = cantidadAgregar + cantidadTipos;
+
+                            verificadorDePasoDeArea[0] = 0;
+                            verificadorDePasoDeArea[1] = 0;
+                            verificadorDePasoDeArea[2] = 0;
+                            verificadorDePasoDeArea[3] = 0;
+                            verificadorDePasoDeArea[4] = 0;
+
+                            for (i = 0; i < cantidadAgregar; i++) {
+                                printf("\nINGRESE ID DEL TIPO: ");
+                                scanf("%d", &vecTiposNuevos[i].idTipo);
+                                printf("\nINGRESE EL NOMBRE DEL TIPO: ");
+                                scanf(" %s", vecTiposNuevos[i].nombreTipo);
+                                printf("\nINGRESE LOS PASOS DEL TIPO: ");
+                                for (j = 0; j < 5; j++) {
+                                    do {
+                                        printf("SU PASO %d SERA: ", j + 1);
+                                        scanf("%d", &auxPaso);
+                                        if (auxPaso == 0) {
+                                            vecTiposNuevos[i].pasos[j] = auxPaso;
+                                            break;
+                                        }
+                                    } while (auxPaso < 0 || auxPaso >= 6 || verificadorDePasoDeArea[auxPaso - 1] == 1);
+
+                                    if (auxPaso == 0) {
+
+                                        for (k = j + 1; k < 5; k++) {
+                                            vecTiposNuevos[i].pasos[k] = 0;
+                                        }
+
+                                        break;
+                                    }
+
+                                    printf("\nINGRESE EL TIEMPO POR CADA AREA: \n");
+                                    do {
+                                        printf("\nSU TIEMPO EN EL AREA %d PARA EL TIPO %d ES: ", auxPaso, i + 1);
+                                        scanf("%d", &tiempoTipoPorAreaAux);
+                                    } while (tiempoTipoPorAreaAux <= 0 || tiempoTipoPorAreaAux >= 36000);
+
+                                    printf("\nINGRESE UNA DESVIACION TIPICA POR CADA AREA: \n");
+                                    do {
+                                        printf("\nSU DESVIACION TIPICA EN EL AREA %d POR EL TIPO %d ES: ", auxPaso, i + 1);
+                                        scanf("%f", &desviacionTipicaPorAreaAux);
+                                    } while (desviacionTipicaPorAreaAux < 0.00 || desviacionTipicaPorAreaAux > 1.00);
+
+                                    if (auxPaso > 0 && auxPaso < 6) {
+                                        vecTiposNuevos[i].pasos[j] = auxPaso;
+                                        vecTiposNuevos[i].tiempoPromedioPorTipoPorArea[j] = tiempoTipoPorAreaAux;
+                                        vecTiposNuevos[i].desviacionTipicaPorArea[j] = desviacionTipicaPorAreaAux;
+                                        verificadorDePasoDeArea[auxPaso - 1] = 1;
+                                    }
+                                }
+                            }
+
+
+                            for (i = 0; i < cantidadTipos; i++) {
+                                vecTiposAux[i].idTipo = vecTipos[i].idTipo;
+                                for (j = 0; vecTipos[i].nombreTipo[j] != '\0'; j++) {
+                                    vecTiposAux[i].nombreTipo[j] = vecTipos[i].nombreTipo[j];
+                                }
+                                for (j = 0; j < 5; j++) {
+                                    vecTiposAux[i].pasos[j] = vecTipos[i].pasos[j];
+                                }
+                                vecTiposAux[i].cantidadDoc = vecTipos[i].cantidadDoc;
+                                for (j = 0; j < 5; j++) {
+                                    if (vecTipos[i].pasos[j] == 0) {
+                                        break;
+                                    }
+                                    vecTiposAux[i].tiempoPromedioPorTipoPorArea[j] = vecTipos[i].tiempoPromedioPorTipoPorArea[j];
+                                    vecTiposAux[i].desviacionTipicaPorArea[j] = vecTipos[i].desviacionTipicaPorArea[j];
+                                }
+
+                            }
+
+                            tipos vecTipos[cantidadTotalNueva];
+
+                            for (i = 0; i < cantidadTotalNueva; i++) {
+                                if (i < cantidadTipos) {
+
+                                    vecTipos[i].idTipo = vecTiposAux[i].idTipo;
+                                    for (j = 0; vecTiposAux[i].nombreTipo[j] != '\0'; j++) {
+                                        vecTipos[i].nombreTipo[j] = vecTiposAux[i].nombreTipo[j];
+                                    }
+                                    for (j = 0; j < 5; j++) {
+                                        vecTipos[i].pasos[j] = vecTiposAux[i].pasos[j];
+                                    }
+                                    vecTipos[i].cantidadDoc = vecTiposAux[i].cantidadDoc;
+                                    for (j = 0; j < 5; j++) {
+                                        if (vecTipos[i].pasos[j] == 0) {
+                                            break;
+                                        }
+                                        vecTipos[i].tiempoPromedioPorTipoPorArea[j] = vecTiposAux[i].tiempoPromedioPorTipoPorArea[j];
+                                        vecTipos[i].desviacionTipicaPorArea[j] = vecTiposAux[i].desviacionTipicaPorArea[j];
+                                    }
+
+                                } else if (i >= cantidadTipos && i < cantidadTotalNueva) {
+                                    vecTipos[i].idTipo = vecTiposNuevos[i].idTipo;
+                                    for (j = 0; vecTiposNuevos[i].nombreTipo[j] != '\0'; j++) {
+                                        vecTipos[i].nombreTipo[j] = vecTiposNuevos[i].nombreTipo[j];
+                                    }
+                                    for (j = 0; j < 5; j++) {
+                                        vecTipos[i].pasos[j] = vecTiposNuevos[i].pasos[j];
+                                    }
+                                    vecTipos[i].cantidadDoc = vecTiposNuevos[i].cantidadDoc;
+                                    for (j = 0; j < 5; j++) {
+                                        if (vecTipos[i].pasos[j] == 0) {
+                                            break;
+                                        }
+                                        vecTipos[i].tiempoPromedioPorTipoPorArea[j] = vecTiposNuevos[i].tiempoPromedioPorTipoPorArea[j];
+                                        vecTipos[i].desviacionTipicaPorArea[j] = vecTiposNuevos[i].desviacionTipicaPorArea[j];
+                                    }
+                                }
+                            }
+
+                            cantidadTipos = cantidadTotalNueva;
                         }
 
-                    }*/
+                        printf("\n----------------------------------------------------------------\n");
+                        printf("\nDESEA HACER MODIFICACIONES?\n 1) MODIFICAR\n 0) NO MODIFICAR\nRespuesta: ");
+                        scanf("%d", &modificacion);
+                    }
 
+                    int cantidadDefinida;
+                    printf("\nLA CANTIDAD DE DOCUMENTOS YA ESTA DEFINIDA? (Observacion: 1-SI, 0-NO-Random)\nRespuesta: ");
+                    scanf("%d", &cantidadDefinida);
+                    if (cantidadDefinida) {
+                        printf("LA CANTIDAD DE DOCUMENTOS ES: ");
+                        scanf("%d", &cantidadDocumentos);
+                    } else {
+                        cantidadDocumentos = 100 + rand() % 100;
+                    }
 
-                    //calcularPoisson();
+                    auxCantidadDoc = cantidadDocumentos;
+                    calcularPoisson(vecTipos);
 
                     //run();
 
@@ -178,7 +332,6 @@ void agregarTiposNuevos(tipos vecTipos[]) {
 
         vecTipos[i].idTipo = idContadorTipo;
 
-        vecTipos[i].probabilidadAparicion = 0.00;
 
         printf("\nLEER NOMBRE DEL TIPO: ");
         scanf("%s", vecTipos[i].nombreTipo);
@@ -299,20 +452,18 @@ void agregarCantidadDeDocumentos(tipos vecTipos[]) {
 
 void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
     system("cls");
-
+    int i, j;
+    int cantDoc[cantidadTipos];
+    for (i = 0; i < cantidadTipos; i++) {
+        cantDoc[i] = vecTipos[i].cantidadDoc;
+    }
     int areaInicioProceso;
     documento vecTotalDoc[200];
-    int i, j;
+
     int auxTipo;
     int procesando[5];
-    int codigoSimulacion, intervaloActualizacion;
-    double duracionSimulacion;
+    int intervaloActualizacion;
 
-    codigoSimulacion++;
-
-    printf("\nINGRESE LA DURACION DE LA SIMULACION EN MINUTOS: ");
-    scanf("%lf", &duracionSimulacion);
-    duracionSimulacion *= 60;
 
     printf("\nINGRESE LE INTERVALO DE ACTUALIZACION: ");
     scanf("%d", &intervaloActualizacion);
@@ -321,7 +472,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
     for (i = 0; i < cantidadDocumentos; i++) {
         auxTipo = rand() % cantidadTipos;
 
-        while (vecTipos[auxTipo].cantidadDoc == 0) {
+        while (cantDoc[auxTipo] == 0) {
             auxTipo = rand() % cantidadTipos;
         }
         vecTotalDoc[i].procesado = 0;
@@ -342,7 +493,7 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
 
         }
 
-        vecTipos[auxTipo].cantidadDoc -= 1;
+        cantDoc[auxTipo] -= 1;
     }
 
     for (i = 0; i < 5; i++) {
@@ -682,6 +833,7 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
         tipoGuardar.tipo = i + 1;
         tipoGuardar.cantidadXtipo = vecTipos[i].cantidadDoc;
         tipoGuardar.pendientes = contadorPendientes[i];
+        printf("\n%d  %d  %d  %d ", tipoGuardar.idSimulacion, tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.pendientes);
         fwrite(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
     }
 
@@ -696,58 +848,177 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
 
     fclose(simulacionArchivo);
 
+    simulacionArchivo = fopen("tipoAlmacenado.txt", "rb");
+    fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
+    while (!feof(simulacionArchivo)) {
+        printf("\nIDSim: |%d| Tipo:|%d| Cant: |%d|", tipoGuardar.idSimulacion, tipoGuardar.tipo, tipoGuardar.cantidadXtipo);
+        fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
+    }
+
+    fclose(simulacionArchivo);
+
     return;
 }
 
-
-/*
-
-int poissonRandom(double expectedValue);
-int Cantidad(int CanMin, int CanProm);
-
-void calcularPoisson() {
+void calcularPoisson(tipos vecTipos[]) {
     srand(time(NULL));
     int CanP, horas;
     int numero, CanM;
     int i;
+    int n;
+    int contadorTipo = 0;
+    int acumCantTipo = 0;
+    int promedioTipo = 0;
+    tipoAlmacenado archivo;
+
+    FILE* simulacionArchivo;
+    simulacionArchivo = fopen("tipoAlmacenado.txt", "rb");
 
     //buscar apariciones por tipo
+
     for (i = 0; i < cantidadTipos; i++) {
-
-
-        printf("Ingrese la cantidad de veces promedio del suceso por dia:\n");
-        //scanf("%d",&CanP);
-        CanP = rand() % 21 + 100;
-        printf("%d\n", CanP);
-        printf("Ingrese la cantidad de minutos que durará la simulación:\n");
-        //scanf("%d",&CanM);
-        CanM = (rand() % 1441);
-        horas = CanM / 60;
-        printf("%d		%dhs %dms\n", CanM, horas, (CanM - horas * 60));
-        numero = Cantidad(CanM, CanP);
-        printf("%d", numero);
+        fread(&archivo, sizeof (tipoAlmacenado), 1, simulacionArchivo);
+        while (!feof(simulacionArchivo)) {
+            if (archivo.tipo == i + 1) {
+                contadorTipo++;
+                acumCantTipo += archivo.cantidadXtipo;
+            }
+            fread(&archivo, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
+        }
+        if (contadorTipo != 0) {
+            promedioTipo = acumCantTipo / contadorTipo;
+            n = Cantidad(duracionSimulacion / 60, promedioTipo);
+            if (!cantidadAgregar && i + 1 == cantidadTipos) {
+                n = n + auxCantidadDoc;
+            }
+            vecTipos[i].cantidadDoc = n;
+            printf("\nLa cantidad para el tipo %d es: |%d|", i + 1, vecTipos[i].cantidadDoc);
+            contadorTipo = 0;
+            acumCantTipo = 0;
+            promedioTipo = 0;
+            fseek(simulacionArchivo, 0 * sizeof (tipoAlmacenado), SEEK_SET);
+        }
     }
-    return 0;
+
+    return;
 }
 
 int Cantidad(int CanMin, int CanProm) {
-    double lambda = CanProm * CanMin / 1444;
+    double lambda = CanProm * CanMin / 2;
     int numazar = poissonRandom(lambda);
     return numazar;
 }
 
 int poissonRandom(double expectedValue) {
+    int auxanterior = auxCantidadDoc;
     int n = 0; //counter of iteration
     double limit;
     double x; //pseudo random number
     limit = exp(-expectedValue);
-    x = (rand() % 101);
-    x /= 100;
-    while (x > limit) {
-        n++;
+    do {
+        n = 0;
+        auxCantidadDoc = auxanterior;
         x = (rand() % 101);
         x /= 100;
-    }
+        while (x > limit) {
+            n++;
+            x = (rand() % 101);
+            x /= 100;
+        }
+        auxanterior = auxCantidadDoc;
+        auxCantidadDoc -= n;
+    } while (auxCantidadDoc < 0);
+
     return n;
 }
-*/
+
+void actualizar(tipos vecTipos[cantidadTipos]) {
+
+    int i;
+    int opcion, modificacionIdTipo;
+
+    int volver = 0;
+    int verificadorDePasoDeArea[5];
+
+    printf("\nELIJA SU OPCION DE MODIFICACION: \n");
+    printf("\n\t1-NOMBRE\n\t2-PASOS\n\t3-TIEMPO PROMEDIO\n\t4-DESVIACION TIPICA");
+    printf("\nRespuesta: ");
+    scanf("%d", &opcion);
+
+    printf("\nELIJA LA ID NUEVA: ");
+    scanf("%d", &modificacionIdTipo);
+
+    if (modificacionIdTipo == 1) {
+        printf("\nNOMBRE ACTUAL: %s", vecTipos[modificacionIdTipo - 1].nombreTipo);
+
+        vecTipos[modificacionIdTipo - 1].nombreTipo[0] = '\0';
+
+        printf("\nNOMBRE NUEVO: ");
+        scanf(" %s", vecTipos[modificacionIdTipo - 1].nombreTipo);
+    }
+
+    if (modificacionIdTipo == 2) {
+        verificadorDePasoDeArea[0] = 0;
+        verificadorDePasoDeArea[1] = 0;
+        verificadorDePasoDeArea[2] = 0;
+        verificadorDePasoDeArea[3] = 0;
+        verificadorDePasoDeArea[4] = 0;
+
+        printf("\nINGRESE LOS PASOS NUEVOS: ");
+        printf("\nINGRESE 0 PARA QUE NO EXISTA PASO QUE DAR: \n");
+        for (i = 0; i < 5; i++) {
+
+            if (vecTipos[modificacionIdTipo - 1].pasos[i] == 0) {
+                printf("NO HAY PASOS..\n");
+            } else {
+                printf("SU PASO ACTUAL ES: %d\n", vecTipos[modificacionIdTipo - 1].pasos[i]);
+            }
+            printf("\nSU PASO A MODIFICAR ES: ");
+            do {
+                volver = 0;
+
+                scanf("%d", &vecTipos[modificacionIdTipo - 1].pasos[i]);
+
+                if (verificadorDePasoDeArea[vecTipos[modificacionIdTipo - 1].pasos[i] - 1] == 1) {
+                    volver = 1;
+                }
+            } while (vecTipos[modificacionIdTipo - 1].pasos[i] < 0 || vecTipos[modificacionIdTipo - 1].pasos[i] > 5 || volver == 1);
+
+            verificadorDePasoDeArea[vecTipos[modificacionIdTipo - 1].pasos[i] - 1] = 1;
+
+            if (!vecTipos[modificacionIdTipo - 1].pasos[i]) {
+                break;
+            }
+        }
+    }
+
+    if (modificacionIdTipo == 3) {
+        printf("\nINRGESE EL TIEMPO PROMEDIO NUEVO: \n");
+        for (i = 0; i < 5; i++) {
+            if (vecTipos[modificacionIdTipo - 1].pasos[i] == 0) {
+                break;
+            } else {
+                printf("SU TIEMPO PROMEDIO ACTUAL ES: %f\n", vecTipos[modificacionIdTipo - 1].tiempoPromedioPorTipoPorArea[i]);
+                do {
+                    scanf("%d", &vecTipos[modificacionIdTipo - 1].tiempoPromedioPorTipoPorArea[i]);
+                } while (vecTipos[modificacionIdTipo - 1].tiempoPromedioPorTipoPorArea[i] <= 0 || vecTipos[modificacionIdTipo - 1].tiempoPromedioPorTipoPorArea[i] >= 36000);
+            }
+        }
+    }
+
+    if (modificacionIdTipo == 4) {
+        printf("\nINRGESE LA DESVIACION TIPICA: \n");
+        for (i = 0; i < 5; i++) {
+            if (vecTipos[modificacionIdTipo - 1].pasos[i] == 0) {
+                break;
+            } else {
+                printf("SU PASO ACTUAL ES: %f\n", vecTipos[modificacionIdTipo - 1].desviacionTipicaPorArea[i]);
+                do {
+                    scanf("%f", &vecTipos[modificacionIdTipo - 1].desviacionTipicaPorArea[i]);
+                } while (vecTipos[modificacionIdTipo - 1].desviacionTipicaPorArea[i] < 0.00 || vecTipos[modificacionIdTipo - 1].desviacionTipicaPorArea[i] >= 1.00);
+            }
+        }
+    }
+
+    return;
+}
