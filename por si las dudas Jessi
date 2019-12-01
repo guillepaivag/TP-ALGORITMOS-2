@@ -66,19 +66,23 @@ int cantidadTipos;
 int cantidadDocumentos;
 tipos vecTipos[1];
 int idContadorTipo = 0;
+double duracionSimulacion;
+int auxCantidadDoc;
 
 void addDocumento(documentoEnArea**, documentoEnArea**, documento);
 void agregarTiposNuevos(tipos*);
 void agregarCantidadDeDocumentos(tipos*);
 void cerearVecTipos(tipos*);
-void run(tipos*, documentoEnArea* area[2][5],int duracionsimulacion);
+void run(tipos*, documentoEnArea* area[2][5]);
 void ImprimirReporte(documentoEnArea*);
 void procesarArea(documentoEnArea* area[2][5], int vecVerificadorInicio[5], documento vecTotalDoc[cantidadDocumentos]);
 void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[cantidadTipos]);
 void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos]);
 
-int poissonRandom(int CanMin, int CanProm);
-void calcularPoisson(tipos vecTipos[],int duracionSimulacion);
+
+void calcularPoisson(tipos vecTipos[]);
+int poissonRandom(double expectedValue);
+int Cantidad(int CanMin, int CanProm);
 
 int main() {
 
@@ -88,7 +92,7 @@ int main() {
     int simulacion;
     int modificacion;
     int procesoModificacion;
-    double duracionSimulacion;
+
 
     documentoEnArea * area[2][5] = {
         {NULL, NULL, NULL, NULL, NULL},
@@ -119,7 +123,7 @@ int main() {
 
                 agregarCantidadDeDocumentos(vecTipos);
 
-                run(vecTipos, area, duracionSimulacion);
+                run(vecTipos, area);
 
             } else if (simulacion == 2) {
 
@@ -129,8 +133,10 @@ int main() {
 
                 if (simulacionArchivo != NULL) {
                     printf("\nIngrese la cantidad de tipos: ");
-                    scanf("%d",&cantidadTipos);
+                    scanf("%d", &cantidadTipos);
                     tipos vecTipos[cantidadTipos];
+
+                    
                     /*printf("\nDESEA HACER MODIFICACIONES?\n 1) MODIFICAR\n 0) NO MODIFICAR\nRespuesta: ");
                     scanf("%d", &modificacion);
 
@@ -149,9 +155,18 @@ int main() {
                         }
 
                     }*/
+                    int cantidadDefinida;
+                    printf("\nLA CANTIDAD DE DOCUMENTOS YA ESTA DEFINIDA? (Observacion: 1-SI, 0-NO-Random)\nRespuesta: ");
+                    scanf("%d", &cantidadDefinida);
+                    if (cantidadDefinida) {
+                        printf("LA CANTIDAD DE DOCUMENTOS ES: ");
+                        scanf("%d", &cantidadDocumentos);
+                    } else {
+                        cantidadDocumentos = 100 + rand() % 100;
+                    }
 
-
-                    calcularPoisson(vecTipos,duracionSimulacion);
+                    auxCantidadDoc = cantidadDocumentos;
+                    calcularPoisson(vecTipos);
 
                     //run();
 
@@ -307,16 +322,16 @@ void agregarCantidadDeDocumentos(tipos vecTipos[]) {
     return;
 }
 
-void run(tipos vecTipos[], documentoEnArea* area[2][5], int duracionSimulacion) {
+void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
     system("cls");
     int i, j;
     int cantDoc[cantidadTipos];
-    for(i=0;i<cantidadTipos;i++){
-        cantDoc[i]=vecTipos[i].cantidadDoc;
+    for (i = 0; i < cantidadTipos; i++) {
+        cantDoc[i] = vecTipos[i].cantidadDoc;
     }
     int areaInicioProceso;
     documento vecTotalDoc[200];
-    
+
     int auxTipo;
     int procesando[5];
     int intervaloActualizacion;
@@ -684,13 +699,13 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
     fclose(simulacionArchivo);
     //segundo archivo, guardamos datos
     simulacionArchivo = fopen("tipoAlmacenado.txt", "ab");
-    
+
     for (i = 0; i < cantidadTipos; i++) {
         tipoGuardar.idSimulacion = archivoID.idSimulacion;
         tipoGuardar.tipo = i + 1;
         tipoGuardar.cantidadXtipo = vecTipos[i].cantidadDoc;
         tipoGuardar.pendientes = contadorPendientes[i];
-        printf("\n%d  %d  %d  %d ",tipoGuardar.idSimulacion,tipoGuardar.tipo,tipoGuardar.cantidadXtipo,tipoGuardar.pendientes);
+        printf("\n%d  %d  %d  %d ", tipoGuardar.idSimulacion, tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.pendientes);
         fwrite(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
     }
 
@@ -704,11 +719,11 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
     }
 
     fclose(simulacionArchivo);
-    
+
     simulacionArchivo = fopen("tipoAlmacenado.txt", "rb");
     fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
     while (!feof(simulacionArchivo)) {
-        printf("\nIDSim: |%d| Tipo:|%d| Cant: |%d|", tipoGuardar.idSimulacion, tipoGuardar.tipo,tipoGuardar.cantidadXtipo);
+        printf("\nIDSim: |%d| Tipo:|%d| Cant: |%d|", tipoGuardar.idSimulacion, tipoGuardar.tipo, tipoGuardar.cantidadXtipo);
         fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
     }
 
@@ -717,14 +732,15 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
     return;
 }
 
-void calcularPoisson(tipos vecTipos[],int duracionSimulacion) {
+void calcularPoisson(tipos vecTipos[]) {
     srand(time(NULL));
     int CanP, horas;
     int numero, CanM;
     int i;
+    int n;
     int contadorTipo = 0;
     int acumCantTipo = 0;
-    int promedioTipo;
+    int promedioTipo = 0;
     tipoAlmacenado archivo;
 
     FILE* simulacionArchivo;
@@ -732,6 +748,10 @@ void calcularPoisson(tipos vecTipos[],int duracionSimulacion) {
 
 
     //buscar apariciones por tipo
+
+
+
+
     for (i = 0; i < cantidadTipos; i++) {
         fread(&archivo, sizeof (tipoAlmacenado), 1, simulacionArchivo);
         while (!feof(simulacionArchivo)) {
@@ -741,33 +761,46 @@ void calcularPoisson(tipos vecTipos[],int duracionSimulacion) {
             }
             fread(&archivo, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
         }
-        promedioTipo = acumCantTipo / contadorTipo;
-        printf("El promedio para el tipo %d es: %d", i+1, promedioTipo);
-        vecTipos[i].cantidadDoc = poissonRandom(duracionSimulacion, promedioTipo);
-        printf("\nLa cantidad para el tipo %d es: %d", i+1, numero);
-        contadorTipo=0;
-        acumCantTipo=0;
+        if (contadorTipo != 0) {
+            promedioTipo = acumCantTipo / contadorTipo;
+            n = Cantidad(duracionSimulacion / 60, promedioTipo);
+
+            vecTipos[i].cantidadDoc = n;
+            contadorTipo = 0;
+            acumCantTipo = 0;
+            promedioTipo = 0;
+            fseek(simulacionArchivo, 0 * sizeof (tipoAlmacenado), SEEK_SET);
+        }
     }
-    
-    return ;
+
+    return;
 }
 
+int Cantidad(int CanMin, int CanProm) {
+    double lambda = CanProm * CanMin / 2;
+    int numazar = poissonRandom(lambda);
+    return numazar;
+}
 
-int poissonRandom(int CanMin, int CanProm) {
-    double lambda = CanProm * CanMin / 90;
-    printf("B\n");
-    int n = 0; 
+int poissonRandom(double expectedValue) {
+    int auxanterior=auxCantidadDoc;
+    int n = 0; //counter of iteration
     double limit;
-    double x; 
-    limit = exp(-lambda);
-    x = (rand() % 101);
-    x /= 100;
-    while (x > limit) {
-        n++;
+    double x; //pseudo random number
+    limit = exp(-expectedValue);
+    do{
+        n=0;
+        auxCantidadDoc=auxanterior;
         x = (rand() % 101);
         x /= 100;
-    }
-    printf("c n: %d\n",n);
+        while (x > limit) {
+            n++;
+            x = (rand() % 101);
+            x /= 100;
+        }
+        printf("\nN: %d", n);
+        auxanterior=auxCantidadDoc;
+        auxCantidadDoc -= n;
+    }while(auxCantidadDoc < 0);
     return n;
 }
- 
