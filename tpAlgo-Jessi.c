@@ -1094,13 +1094,13 @@ void actualizar(tipos vecTipos[cantidadTipos]) {
             printf("\nSU PASO A MODIFICAR ES: ");
             do {
                 volver = 0;
-
+                printf("\nSU PASO A MODIFICAR ES: ");
                 scanf("%d", &vecTipos[modificacionIdTipo - 1].pasos[i]);
 
                 if (verificadorDePasoDeArea[vecTipos[modificacionIdTipo - 1].pasos[i] - 1] == 1) {
                     volver = 1;
                 }
-            } while (vecTipos[modificacionIdTipo - 1].pasos[i] < 0 || vecTipos[modificacionIdTipo - 1].pasos[i] > 5 || volver == 1);
+            } while ((vecTipos[modificacionIdTipo - 1].pasos[i] < 0 || vecTipos[modificacionIdTipo - 1].pasos[i] > 5 || volver == 1) && vecTipos[modificacionIdTipo - 1].pasos[i] != 0);
 
             verificadorDePasoDeArea[vecTipos[modificacionIdTipo - 1].pasos[i] - 1] = 1;
 
