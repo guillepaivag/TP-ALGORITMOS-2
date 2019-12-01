@@ -394,6 +394,7 @@ int main() {
                         printf("LE SOBRA %d\n", auxCantidadDoc);
                         printf("YA SELECCIONO TODO! NO SOBRA MAS :)\n");
                     }
+                    
                     run(vecTipos, area);
 
                     guardarTipos(vecTipos);
@@ -421,6 +422,7 @@ void agregarTiposNuevos(tipos vecTipos[]) {
     int auxPaso;
     int tiempoTipoPorAreaAux;
     float desviacionTipicaPorAreaAux;
+    
 
     // TIPO
     for (i = 0; i < cantidadTipos; i++) {
@@ -550,6 +552,17 @@ void agregarCantidadDeDocumentos(tipos vecTipos[]) {
 void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
     //system("cls");
     int i, j;
+    for (i = 0; i < cantidadTipos; i++) {
+        printf("\nTipo: %d", vecTipos[i].idTipo);
+        printf("\nPimer recorrido: %d", vecTipos[i].pasos[0]);
+        printf("\nPimer recorrido: %d", vecTipos[i].pasos[1]);
+        printf("\nPimer recorrido: %d", vecTipos[i].pasos[2]);
+        printf("\nPimer recorrido: %d", vecTipos[i].pasos[3]);
+        printf("\nPimer recorrido: %d", vecTipos[i].pasos[4]);
+        printf("\nTiempo: %f", vecTipos[i].tiempoPromedioPorTipoPorArea[0]);
+        printf("\nDesviacion: %f", vecTipos[i].desviacionTipicaPorArea[0]);
+    }
+    
     int cantDoc[cantidadTipos];
     for (i = 0; i < cantidadTipos; i++) {
         cantDoc[i] = vecTipos[i].cantidadDoc;
@@ -591,6 +604,11 @@ void run(tipos vecTipos[], documentoEnArea* area[2][5]) {
         }
 
         cantDoc[auxTipo] -= 1;
+    }
+    for (i = 0; i < cantidadDocumentos; i++) {
+        printf("\n%d", vecTotalDoc[i].tipo);
+        printf("\nR00: %d", vecTotalDoc[i].recorrido[0][0]);
+
     }
 
     for (i = 0; i < 5; i++) {
@@ -777,7 +795,7 @@ void procesarArea(documentoEnArea* area[2][5], int procesando[5], documento vecT
                         }
 
                         free(eliminar);
-                        
+
 
                     }
                 } else {
