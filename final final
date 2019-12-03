@@ -72,7 +72,9 @@ struct tipoAlmacenado {
     int idSimulacion;
     int tipo;
     int cantidadXtipo;
+    int procesados;
     int pendientes;
+    int noEntro;
 };
 
 typedef struct almacenamientoSimulaciones almacenamientoSimulaciones;
@@ -99,7 +101,7 @@ void run(tipos*, documentoEnArea* area[2][5]);
 void ImprimirReporte(documentoEnArea* area[][5]);
 void procesarArea(documentoEnArea* area[2][5], int vecVerificadorInicio[5], documento vecTotalDoc[cantidadDocumentos]);
 void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[cantidadTipos]);
-void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos]);
+void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos],int contadorProcesados[cantidadTipos],int contadorNoEntro[cantidadTipos]);
 void actualizar(tipos vecTipos[cantidadTipos]);
 void guardarTipos(tipos vecTipos[cantidadTipos]);
 void liberarProcesoBasura(documentoEnArea* *inicio, documentoEnArea* *ultimo);
@@ -1046,7 +1048,7 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
     for(i=0;i<cantidadDocumentos;i++){
         for(j=0;j<5;j++){
             if(vecTotalDoc[i].recorrido[1][j]==1){
-                    AreaPorTipoProcesadas[vecTotalDoc[i].tipo-1][vecTotalDoc[i].recorrido[0][j]-1]++;
+                AreaPorTipoProcesadas[vecTotalDoc[i].tipo-1][vecTotalDoc[i].recorrido[0][j]-1]++;
             }
             if(vecTotalDoc[i].recorrido[1][j]==0 && vecTotalDoc[i].recorrido[0][j]!=0){
                 if(vecTotalDoc[i].pendiente == 1){
@@ -1080,7 +1082,7 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
         
     }
 
-    guardarDatosDeSimulacion(vecTipos, contadorPendientes);
+    guardarDatosDeSimulacion(vecTipos, contadorPendientes, contadorProcesados,contadorNoEntro);
 
     return;
 }
@@ -1088,7 +1090,7 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
 //UN ARCHIVO DE INDICE, QUE SON LAS ID DE LAS SIMULACIONES
 //UN ARCHIVO DE LOS RESULTADOS DE LA SIMULACION
 
-void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos]) {
+void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendientes[cantidadTipos],int contadorProcesados[cantidadTipos],int contadorNoEntro[cantidadTipos]) {
     int i;
 
 
@@ -1131,7 +1133,9 @@ void guardarDatosDeSimulacion(tipos vecTipos[cantidadTipos], int contadorPendien
         tipoGuardar.idSimulacion = archivoID.idSimulacion;
         tipoGuardar.tipo = i + 1;
         tipoGuardar.cantidadXtipo = vecTipos[i].cantidadDoc;
+        tipoGuardar.procesados = contadorProcesados[i];
         tipoGuardar.pendientes = contadorPendientes[i];
+        tipoGuardar.noEntro = contadorNoEntro[i];
         fwrite(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo);
     }
 
@@ -1397,12 +1401,12 @@ void historial() {
     fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo2);
     while (!feof(simulacionArchivo2)) {
         if (tipoGuardar.idSimulacion == i) {
-            printf("\n|Tipo:|%2d| Cantidad: |%3d| Pendientes: |%3d|    |", tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.pendientes);
+            printf("\n|Tipo:|%2d| Cantidad: |%3d| Procesados: |%3d| Pendientes: |%3d| NoEntro: |%3d|   |", tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.procesados, tipoGuardar.pendientes, tipoGuardar.noEntro);
         } else {
             i++;
             printf("\n-------------------------------------------------");
             printf("\nSIMULACION | %2d |                               |", i);
-            printf("\n|Tipo:|%2d| Cantidad: |%3d| Pendientes: |%3d|    |", tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.pendientes);
+            printf("\n|Tipo:|%2d| Cantidad: |%3d| Procesados: |%3d| Pendientes: |%3d| NoEntro: |%3d|   |", tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.procesados, tipoGuardar.pendientes, tipoGuardar.noEntro);
         }
         fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo2);
     }
