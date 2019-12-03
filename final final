@@ -92,6 +92,7 @@ double duracionSimulacion = 0;
 int auxCantidadDoc = 0;
 int cantidadAgregar = 0;
 int ultimoIndice = 0;
+int duracionDia;
 
 void addDocumento(documentoEnArea**, documentoEnArea**, documento);
 void agregarTiposNuevos(tipos*);
@@ -1158,6 +1159,9 @@ void calcularPoisson(tipos vecTipos[]) {
     int promedioTipo = 0;
     tipoAlmacenado archivo;
 
+    printf("\nINGRESAR DURACION DE UN DIA DE TRABAJO: ");
+    scanf("%d", &duracionDia);
+
     FILE* simulacionArchivo;
     simulacionArchivo = fopen("tipoAlmacenado.txt", "rb");
 
@@ -1193,7 +1197,7 @@ void calcularPoisson(tipos vecTipos[]) {
 }
 
 int Cantidad(int CanMin, int CanProm) {
-    double lambda = CanProm * CanMin / 5;
+    double lambda = CanProm * CanMin / duracionDia;
     int numazar = poissonRandom(lambda);
     return numazar;
 }
@@ -1394,8 +1398,8 @@ void historial() {
 
 
     simulacionArchivo2 = fopen("tipoAlmacenado.txt", "rb");
-    printf("\n-------------------------------------------------");
-    printf("\nSIMULACION | %2d |                               |", i);
+    printf("\n---------------------------------------------------------------------------------");
+    printf("\nSIMULACION | %2d |                                                               |", i);
 
 
     fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo2);
@@ -1404,13 +1408,13 @@ void historial() {
             printf("\n|Tipo:|%2d| Cantidad: |%3d| Procesados: |%3d| Pendientes: |%3d| NoEntro: |%3d|   |", tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.procesados, tipoGuardar.pendientes, tipoGuardar.noEntro);
         } else {
             i++;
-            printf("\n-------------------------------------------------");
-            printf("\nSIMULACION | %2d |                               |", i);
+            printf("\n---------------------------------------------------------------------------------");
+            printf("\nSIMULACION | %2d |                                                               |", i);
             printf("\n|Tipo:|%2d| Cantidad: |%3d| Procesados: |%3d| Pendientes: |%3d| NoEntro: |%3d|   |", tipoGuardar.tipo, tipoGuardar.cantidadXtipo, tipoGuardar.procesados, tipoGuardar.pendientes, tipoGuardar.noEntro);
         }
         fread(&tipoGuardar, sizeof ( tipoAlmacenado), 1, simulacionArchivo2);
     }
-    printf("\n-------------------------------------------------");
+    printf("\n---------------------------------------------------------------------------------");
 
     fclose(simulacionArchivo2);
 
