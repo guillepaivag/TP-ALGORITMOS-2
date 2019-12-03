@@ -957,10 +957,32 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
         contadorProcesados[i] = 0;
         contadorNoEntro[i] = 0;
     }
+
+    almacenamientoSimulaciones archivoID = {0, 0};
+    FILE* simulacionArchivo;
+
+    simulacionArchivo = fopen("idSimulaciones.txt", "rb");
+
+    if (simulacionArchivo != NULL) {
+        fclose(simulacionArchivo);
+
+        simulacionArchivo = fopen("idSimulaciones.txt", "rb");
+        //Buscamos la ultima simulacion guardada
+        while (!feof(simulacionArchivo)) {
+            fread(&archivoID, sizeof ( almacenamientoSimulaciones), 1, simulacionArchivo);
+        }
+        archivoID.idSimulacion++;
+        
+        fclose(simulacionArchivo);
+    } else {
+        archivoID.idSimulacion = 1;
+        archivoID.final = cantidadTipos;
+    }
+
     printf("\n------------------------------------------------------\n");
     printf("\nGENERANDO INFORME");
     printf("\n------------------------------------------------------\n");
-    printf("SIMULACION NRO: |%d| (ARREGLAR)\n", 1);
+    printf("SIMULACION NRO: |%d| \n", archivoID.idSimulacion);
     //IMPRIMIR PROCESADAS
     printf("\n------------------------------------------------------\n");
     printf("\nPROCESADAS COMPLETAMENTE: ");
@@ -986,13 +1008,22 @@ void imprimirInforme(documento vecTotalDoc[cantidadDocumentos], tipos vecTipos[c
             hora2Text[pos] = '\0';
 
 
-            printf("\n\n---------------------------------------------------");
-            printf("\n|   Numero de solicitud: %d                         |", vecTotalDoc[i].id);
-            printf("\n|   Tipo de solicitud: %d                           |", vecTotalDoc[i].tipo);
-            printf("\n|   Hora de recepcion: %s                    |", hora1Text);
-            printf("\n|   Hora de conclusion: %s                   |", hora2Text);
-            printf("\n|   Duracion: |%.2lf| segundos                      |", difftime(vecTotalDoc[i].tiempoFinal, vecTotalDoc[i].tiempoInicio));
-            printf("\n---------------------------------------------------");
+            /*
+                printf("\n\n----------------------------------------------------");
+                printf("\n|   Numero de solicitud: %3d                       |", vecTotalDoc[i].id);
+                printf("\n|   Tipo de solicitud: %3d                         |", vecTotalDoc[i].tipo);
+                printf("\n|   Hora de recepcion: %s                    |", hora1Text);
+                printf("\n|   Hora de conclusion: %s                   |", hora2Text);
+                printf("\n|   Duracion: |%5.2lf| segundos                     |", difftime(vecTotalDoc[i].tiempoFinal, vecTotalDoc[i].tiempoInicio));
+                printf("\n----------------------------------------------------");
+            */
+            printf("\n\n----------------------------------------------------");
+            printf("\n|   Numero de solicitud:                        %3d|", vecTotalDoc[i].id);
+            printf("\n|   Tipo de solicitud:                          %3d|", vecTotalDoc[i].tipo);
+            printf("\n|   Hora de recepcion:                     %s|", hora1Text);
+            printf("\n|   Hora de conclusion:                    %s|", hora2Text);
+            printf("\n|   Duracion:                      |%5.2lf| segundos|", difftime(vecTotalDoc[i].tiempoFinal, vecTotalDoc[i].tiempoInicio));
+            printf("\n----------------------------------------------------");
 
 
             contadorProcesados[vecTotalDoc[i].tipo - 1]++;
